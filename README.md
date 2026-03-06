@@ -12,15 +12,23 @@
 
 ## Installation
 
+With npm v7 or newer, this is usually enough:
+
 ```bash
-npm install @inoxialabs/react-native-nitro-location-geocoder react-native-nitro-modules
+npm install @inoxialabs/react-native-nitro-location-geocoder
 ```
 
-Peer dependencies:
+This package declares the following peer dependencies:
 
 - `react`
 - `react-native`
 - `react-native-nitro-modules`
+
+If your package manager does not install peer dependencies automatically, install `react-native-nitro-modules` manually:
+
+```bash
+npm install @inoxialabs/react-native-nitro-location-geocoder react-native-nitro-modules
+```
 
 iOS:
 
