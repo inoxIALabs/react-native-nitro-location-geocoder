@@ -1,0 +1,65 @@
+{
+  "name": "@inoxialabs/react-native-nitro-location-geocoder",
+  "version": "0.1.0",
+  "description": "React Native Nitro module for reverse geocoding coordinates into country and locality context.",
+  "license": "Apache-2.0",
+  "author": "Inoxia Labs",
+  "main": "src/index",
+  "source": "src/index",
+  "types": "src/index.ts",
+  "react-native": "src/index",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inoxIALabs/react-native-nitro-location-geocoder.git"
+  },
+  "homepage": "https://github.com/inoxIALabs/react-native-nitro-location-geocoder#readme",
+  "bugs": {
+    "url": "https://github.com/inoxIALabs/react-native-nitro-location-geocoder/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "react-native",
+    "nitro",
+    "geocoder",
+    "location",
+    "country",
+    "locality",
+    "reverse-geocoding",
+    "ios",
+    "android"
+  ],
+  "files": [
+    "src",
+    "react-native.config.js",
+    "nitro.json",
+    "nitrogen",
+    "android/build.gradle",
+    "android/fix-prefab.gradle",
+    "android/gradle.properties",
+    "android/CMakeLists.txt",
+    "android/src/**/*",
+    "ios/**/*.h",
+    "ios/**/*.m",
+    "ios/**/*.mm",
+    "ios/**/*.cpp",
+    "ios/**/*.swift",
+    "*.podspec",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "specs": "nitrogen --logLevel=debug",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": "^0.35.0"
+  },
+  "devDependencies": {
+    "nitrogen": "^0.35.0",
+    "vitest": "^3.2.4"
+  }
+}

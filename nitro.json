@@ -1,0 +1,24 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": [
+    "locationgeocoder"
+  ],
+  "ios": {
+    "iosModuleName": "NitroLocationGeocoder"
+  },
+  "android": {
+    "androidNamespace": [
+      "locationgeocoder"
+    ],
+    "androidCxxLibName": "NitroLocationGeocoder"
+  },
+  "autolinking": {
+    "LocationGeocoder": {
+      "swift": "HybridLocationGeocoder",
+      "kotlin": "HybridLocationGeocoder"
+    }
+  },
+  "ignorePaths": [
+    "**/node_modules"
+  ]
+}
