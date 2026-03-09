@@ -1,6 +1,6 @@
 # @inoxialabs/react-native-nitro-location-geocoder
 
-React Native Nitro module for reverse geocoding latitude and longitude coordinates into a normalized location result.
+`@inoxialabs/react-native-nitro-location-geocoder` is a minimal React Native Nitro module for reverse geocoding latitude and longitude coordinates into a normalized location result.
 
 ## Features
 
