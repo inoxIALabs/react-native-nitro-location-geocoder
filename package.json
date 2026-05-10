@@ -1,6 +1,6 @@
 {
   "name": "@inoxialabs/react-native-nitro-location-geocoder",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "React Native Nitro module for reverse geocoding coordinates into country and locality context.",
   "license": "Apache-2.0",
   "author": "Inoxia Labs",

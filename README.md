@@ -8,6 +8,7 @@
 - Locale-aware lookups using language tags such as `en`, `es`, or `es-PE`.
 - Small, typed API with a normalized result shape.
 - No backend dependency and no device location permission requirement.
+- Stable generic errors for unavailable geocoders, empty results, invalid coordinates, timeouts, and native geocoder failures.
 
 ## Supported platforms
 
@@ -68,6 +69,7 @@ Parameters:
 - `locale`: required `string`
 
 `locale` accepts a language tag such as `en`, `es`, or `es-PE`. Passing `''` uses the platform default locale, but the argument itself is still required.
+Latitude must be finite and between `-90` and `90`. Longitude must be finite and between `-180` and `180`.
 
 ### `LocationGeocoderResult`
 
@@ -88,11 +90,13 @@ All fields are always present. When the platform geocoder cannot provide a field
 
 - iOS uses `CLGeocoder`.
 - Android uses `android.location.Geocoder`.
+- Calls are independent. Starting one reverse-geocode request does not cancel another request.
+- Requests time out after 10 seconds with `GEOCODER_TIMEOUT`.
+- The module rejects with `INVALID_COORDINATES` when latitude or longitude is outside the valid coordinate range.
 - The module rejects with `NO_RESULTS` when no address is found.
 - Android rejects with `UNAVAILABLE` when the platform geocoder is not available.
-- Android API 33+ requests time out after 15 seconds with `GEOCODER_TIMEOUT`.
 - iOS wraps native geocoder failures as `GEOCODER_FAILED: <platform message>`.
-- Android may surface platform geocoder error messages directly.
+- Android wraps native geocoder failures as `GEOCODER_FAILED` or `GEOCODER_FAILED: <platform message>`.
 
 ## Notes
 
