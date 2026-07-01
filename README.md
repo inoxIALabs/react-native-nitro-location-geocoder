@@ -5,7 +5,7 @@
 ## Features
 
 - Reverse geocoding on iOS and Android.
-- Locale-aware lookups using language tags such as `en`, `es`, or `es-PE`.
+- Locale-aware lookups using language tags. For example: `en`, `es`, or `es-PE`.
 - Small, typed API with a normalized result shape.
 - No backend dependency and no device location permission requirement.
 - Stable generic errors for unavailable geocoders, empty results, invalid coordinates, timeouts, and native geocoder failures.
@@ -29,7 +29,7 @@ Peer dependencies:
 
 - `react`
 - `react-native`
-- `react-native-nitro-modules` `^0.35.0`
+- `react-native-nitro-modules` `^0.35.0 || ^0.36.0`
 
 On iOS, install pods after adding the package:
 

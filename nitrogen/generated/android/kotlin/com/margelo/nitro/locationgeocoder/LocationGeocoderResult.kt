@@ -9,6 +9,7 @@ package com.margelo.nitro.locationgeocoder
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -37,6 +38,28 @@ data class LocationGeocoderResult(
   val subLocality: String
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is LocationGeocoderResult) return false
+    return Objects.deepEquals(this.countryCode, other.countryCode)
+      && Objects.deepEquals(this.country, other.country)
+      && Objects.deepEquals(this.locality, other.locality)
+      && Objects.deepEquals(this.administrativeArea, other.administrativeArea)
+      && Objects.deepEquals(this.subAdministrativeArea, other.subAdministrativeArea)
+      && Objects.deepEquals(this.subLocality, other.subLocality)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      countryCode,
+      country,
+      locality,
+      administrativeArea,
+      subAdministrativeArea,
+      subLocality
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

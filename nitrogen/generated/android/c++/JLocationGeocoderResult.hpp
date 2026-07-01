@@ -17,11 +17,11 @@ namespace margelo::nitro::locationgeocoder {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "LocationGeocoderResult" and the the Kotlin data class "LocationGeocoderResult".
+   * The C++ JNI bridge between the C++ struct "LocationGeocoderResult" and the Kotlin data class "LocationGeocoderResult".
    */
   struct JLocationGeocoderResult final: public jni::JavaClass<JLocationGeocoderResult> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/locationgeocoder/LocationGeocoderResult;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/locationgeocoder/LocationGeocoderResult;";
 
   public:
     /**
