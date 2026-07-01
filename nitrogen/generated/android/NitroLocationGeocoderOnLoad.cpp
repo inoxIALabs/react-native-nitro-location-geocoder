@@ -27,9 +27,9 @@ int initialize(JavaVM* vm) {
 }
 
 struct JHybridLocationGeocoderSpecImpl: public jni::JavaClass<JHybridLocationGeocoderSpecImpl, JHybridLocationGeocoderSpec::JavaPart> {
-  static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/locationgeocoder/HybridLocationGeocoder;";
+  static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/locationgeocoder/HybridLocationGeocoder;";
   static std::shared_ptr<JHybridLocationGeocoderSpec> create() {
-    static auto constructorFn = javaClassStatic()->getConstructor<JHybridLocationGeocoderSpecImpl::javaobject()>();
+    static const auto constructorFn = javaClassStatic()->getConstructor<JHybridLocationGeocoderSpecImpl::javaobject()>();
     jni::local_ref<JHybridLocationGeocoderSpec::JavaPart> javaPart = javaClassStatic()->newObject(constructorFn);
     return javaPart->getJHybridLocationGeocoderSpec();
   }
