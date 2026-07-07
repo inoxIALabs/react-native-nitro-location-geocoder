@@ -40,10 +40,16 @@ describe('public API', () => {
     expect(reverseGeocodeMock).not.toHaveBeenCalled();
   });
 
-  it('preserves known native geocoder errors', async () => {
-    reverseGeocodeMock.mockRejectedValueOnce(new Error('NO_RESULTS'));
+  it.each([
+    'GEOCODER_FAILED',
+    'GEOCODER_TIMEOUT',
+    'INVALID_COORDINATES',
+    'NO_RESULTS',
+    'UNAVAILABLE',
+  ])('preserves known native geocoder error %s', async (message) => {
+    reverseGeocodeMock.mockRejectedValueOnce(new Error(message));
 
-    await expect(reverseGeocode(4.711, -74.0721, 'es-CO')).rejects.toThrow('NO_RESULTS');
+    await expect(reverseGeocode(4.711, -74.0721, 'es-CO')).rejects.toThrow(message);
   });
 
   it('normalizes unknown native errors as geocoder failures', async () => {

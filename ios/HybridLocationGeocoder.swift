@@ -35,22 +35,35 @@ class HybridLocationGeocoder: HybridLocationGeocoderSpec {
         var didComplete = false
         var timeoutWorkItem: DispatchWorkItem?
 
-        func reject(_ message: String) {
-            if didComplete {
-                return
+        func complete(_ block: @escaping () -> Void) {
+            let finish = {
+                if didComplete {
+                    return
+                }
+                didComplete = true
+                timeoutWorkItem?.cancel()
+                block()
             }
-            didComplete = true
-            timeoutWorkItem?.cancel()
-            promise.reject(withError: RuntimeError.error(withMessage: message))
+
+            if Thread.isMainThread {
+                finish()
+            } else {
+                DispatchQueue.main.async {
+                    finish()
+                }
+            }
+        }
+
+        func reject(_ message: String) {
+            complete {
+                promise.reject(withError: RuntimeError.error(withMessage: message))
+            }
         }
 
         func resolve(_ result: LocationGeocoderResult) {
-            if didComplete {
-                return
+            complete {
+                promise.resolve(withResult: result)
             }
-            didComplete = true
-            timeoutWorkItem?.cancel()
-            promise.resolve(withResult: result)
         }
 
         timeoutWorkItem = DispatchWorkItem {

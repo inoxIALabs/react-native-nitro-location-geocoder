@@ -3,15 +3,15 @@ package com.margelo.nitro.locationgeocoder
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.facebook.proguard.annotations.DoNotStrip
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
 import java.io.IOException
 import java.util.Locale
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 @DoNotStrip
 class HybridLocationGeocoder : HybridLocationGeocoderSpec() {
@@ -49,27 +49,24 @@ class HybridLocationGeocoder : HybridLocationGeocoderSpec() {
         longitude: Double,
         locale: String
     ): Promise<LocationGeocoderResult> {
+        if (!isValidCoordinate(latitude, longitude)) {
+            return Promise.rejected(Exception("INVALID_COORDINATES"))
+        }
+
+        if (!Geocoder.isPresent()) {
+            return Promise.rejected(Exception("UNAVAILABLE"))
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return reverseGeocodeApi33(latitude, longitude, locale)
+        }
+
         return Promise.async {
-            if (!isValidCoordinate(latitude, longitude)) {
-                throw Exception("INVALID_COORDINATES")
-            }
-
-            if (!Geocoder.isPresent()) {
-                throw Exception("UNAVAILABLE")
-            }
-
             val address = try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    reverseGeocodeApi33(latitude, longitude, locale)
-                } else {
-                    reverseGeocodeLegacy(latitude, longitude, locale)
-                }
+                reverseGeocodeLegacy(latitude, longitude, locale)
             } catch (error: IllegalArgumentException) {
                 throw Exception("INVALID_COORDINATES")
             } catch (error: IOException) {
-                throw geocoderFailed(error.message)
-            } catch (error: InterruptedException) {
-                Thread.currentThread().interrupt()
                 throw geocoderFailed(error.message)
             } ?: throw Exception("NO_RESULTS")
 
@@ -78,31 +75,76 @@ class HybridLocationGeocoder : HybridLocationGeocoderSpec() {
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun reverseGeocodeApi33(latitude: Double, longitude: Double, locale: String): Address? {
+    private fun reverseGeocodeApi33(
+        latitude: Double,
+        longitude: Double,
+        locale: String
+    ): Promise<LocationGeocoderResult> {
+        val promise = Promise<LocationGeocoderResult>()
         val geocoder = createGeocoder(locale)
-        val resultRef = AtomicReference<Address?>()
-        val errorRef = AtomicReference<Exception?>()
-        val latch = CountDownLatch(1)
+        val handler = Handler(Looper.getMainLooper())
+        val didComplete = AtomicBoolean(false)
 
-        geocoder.getFromLocation(latitude, longitude, 1, object : Geocoder.GeocodeListener {
-            override fun onGeocode(addresses: MutableList<Address>) {
-                resultRef.set(addresses.firstOrNull())
-                latch.countDown()
+        lateinit var timeoutRunnable: Runnable
+
+        fun completeOnce(block: () -> Unit) {
+            val finish = finish@{
+                if (!didComplete.compareAndSet(false, true)) {
+                    return@finish
+                }
+
+                handler.removeCallbacks(timeoutRunnable)
+                block()
             }
 
-            override fun onError(errorMessage: String?) {
-                errorRef.set(geocoderFailed(errorMessage))
-                latch.countDown()
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                finish()
+            } else {
+                handler.post {
+                    finish()
+                }
             }
-        })
-
-        val completed = latch.await(10, TimeUnit.SECONDS)
-        if (!completed) {
-            throw Exception("GEOCODER_TIMEOUT")
         }
 
-        errorRef.get()?.let { throw it }
-        return resultRef.get()
+        fun rejectOnce(error: Exception) {
+            completeOnce {
+                promise.reject(error)
+            }
+        }
+
+        fun resolveOnce(address: Address?) {
+            completeOnce {
+                if (address == null) {
+                    promise.reject(Exception("NO_RESULTS"))
+                    return@completeOnce
+                }
+
+                promise.resolve(mapAddress(address))
+            }
+        }
+
+        timeoutRunnable = Runnable {
+            rejectOnce(Exception("GEOCODER_TIMEOUT"))
+        }
+        handler.postDelayed(timeoutRunnable, TIMEOUT_MS)
+
+        try {
+            geocoder.getFromLocation(latitude, longitude, 1, object : Geocoder.GeocodeListener {
+                override fun onGeocode(addresses: MutableList<Address>) {
+                    resolveOnce(addresses.firstOrNull())
+                }
+
+                override fun onError(errorMessage: String?) {
+                    rejectOnce(geocoderFailed(errorMessage))
+                }
+            })
+        } catch (error: IllegalArgumentException) {
+            rejectOnce(Exception("INVALID_COORDINATES"))
+        } catch (error: IOException) {
+            rejectOnce(geocoderFailed(error.message))
+        }
+
+        return promise
     }
 
     @Suppress("DEPRECATION")
@@ -119,5 +161,9 @@ class HybridLocationGeocoder : HybridLocationGeocoderSpec() {
             subAdministrativeArea = address.subAdminArea ?: "",
             subLocality = address.subLocality ?: ""
         )
+    }
+
+    private companion object {
+        private const val TIMEOUT_MS = 10_000L
     }
 }

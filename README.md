@@ -89,9 +89,11 @@ All fields are always present. When the platform geocoder cannot provide a field
 ## Platform behavior
 
 - iOS uses `CLGeocoder`.
-- Android uses `android.location.Geocoder`.
+- Android uses `android.location.Geocoder`; Android 13+ uses the callback-based API, while older Android versions use the legacy API off the main thread.
 - Calls are independent. Starting one reverse-geocode request does not cancel another request.
-- Requests time out after 10 seconds with `GEOCODER_TIMEOUT`.
+- iOS and Android 13+ requests time out after 10 seconds with `GEOCODER_TIMEOUT`.
+- Android 12 and earlier depend on the legacy platform geocoder returning or failing.
+- Timeout behavior is owned by the native module where supported. Callers should avoid adding a second JavaScript timeout unless they intentionally need a stricter app-level deadline.
 - The module rejects with `INVALID_COORDINATES` when latitude or longitude is outside the valid coordinate range.
 - The module rejects with `NO_RESULTS` when no address is found.
 - Android rejects with `UNAVAILABLE` when the platform geocoder is not available.
