@@ -142,6 +142,8 @@ class HybridLocationGeocoder : HybridLocationGeocoderSpec() {
             rejectOnce(Exception("INVALID_COORDINATES"))
         } catch (error: IOException) {
             rejectOnce(geocoderFailed(error.message))
+        } catch (error: Exception) {
+            rejectOnce(geocoderFailed(error.message))
         }
 
         return promise
