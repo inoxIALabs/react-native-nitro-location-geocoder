@@ -14,8 +14,14 @@
   },
   "autolinking": {
     "LocationGeocoder": {
-      "swift": "HybridLocationGeocoder",
-      "kotlin": "HybridLocationGeocoder"
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridLocationGeocoder"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridLocationGeocoder"
+      }
     }
   },
   "ignorePaths": [

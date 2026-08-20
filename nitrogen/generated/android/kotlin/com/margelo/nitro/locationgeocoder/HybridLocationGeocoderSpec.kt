@@ -10,6 +10,7 @@ package com.margelo.nitro.locationgeocoder
 import androidx.annotation.Keep
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
+import dalvik.annotation.optimization.FastNative
 import com.margelo.nitro.core.Promise
 import com.margelo.nitro.core.HybridObject
 
@@ -43,6 +44,7 @@ abstract class HybridLocationGeocoderSpec: HybridObject() {
   @Keep
   protected open class CxxPart(javaPart: HybridLocationGeocoderSpec): HybridObject.CxxPart(javaPart) {
     // C++ JHybridLocationGeocoderSpec::CxxPart::initHybrid(...)
+    @FastNative
     external override fun initHybrid(): HybridData
   }
   override fun createCxxPart(): CxxPart {
