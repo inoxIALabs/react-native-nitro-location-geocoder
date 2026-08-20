@@ -29,7 +29,7 @@ Peer dependencies:
 
 - `react`
 - `react-native`
-- `react-native-nitro-modules` `^0.35.0 || ^0.36.0`
+- `react-native-nitro-modules` `>=0.35.0`
 
 On iOS, install pods after adding the package:
 
