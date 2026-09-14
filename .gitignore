@@ -78,6 +78,8 @@ local.properties
 # iOS
 ios/build/
 DerivedData/
+.build/
+.swiftpm/
 
 # CocoaPods
 ios/Pods/

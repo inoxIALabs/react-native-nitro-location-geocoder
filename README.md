@@ -37,6 +37,25 @@ On iOS, install pods after adding the package:
 cd ios && pod install
 ```
 
+### Swift requirements
+
+Version 2 requires the Swift 6 language mode and a Swift 6 toolchain on iOS (Xcode 16 or newer; your React Native version may require a newer Xcode). The podspec sets `swift_version = '6.0'`, and Swift 5 language mode is no longer supported for this pod. Swift 6 enables complete concurrency checking by default, so actor isolation and `Sendable` violations are compiler errors. See the [Swift 6 migration guide](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/enabledataracesafety/).
+
+The pod sets its own language mode independently of the app target. Other targets can adopt Swift 6 separately. This implementation uses explicit actor isolation and does not require `SWIFT_APPROACHABLE_CONCURRENCY` or reduced concurrency checking.
+
+The iOS deployment target follows React Native's `min_ios_version_supported`.
+
+## Migrating from 1.x to 2.x
+
+Version 2.0.0 is a major release because it raises the iOS compiler requirement to Swift 6. The iOS request lifecycle now uses explicit actor isolation to coordinate responses, timeouts, and resource cleanup.
+
+1. Use an Xcode version that meets both the Swift requirements above and the requirements of your React Native version.
+2. Update the package to version 2 and reinstall pods using the installation commands above.
+3. Remove any `Podfile` or build-setting override that forces `NitroLocationGeocoder` to Swift 5. Its podspec selects Swift 6. Keep overrides for other pods scoped to those pods; the app and other dependencies can retain their own Swift language modes.
+4. Rebuild the native app. Reloading JavaScript alone does not apply native dependency changes.
+
+No JavaScript or TypeScript API changes are required: exports, method parameters, result fields, error messages, and timeout behavior remain the same. Android behavior and the iOS deployment-target policy are unchanged.
+
 ## Usage
 
 ```ts
@@ -92,6 +111,7 @@ All fields are always present. When the platform geocoder cannot provide a field
 - Android uses `android.location.Geocoder`; Android 13+ uses the callback-based API, while older Android versions use the legacy API off the main thread.
 - Calls are independent. Starting one reverse-geocode request does not cancel another request.
 - iOS and Android 13+ requests time out after 10 seconds with `GEOCODER_TIMEOUT`.
+- On iOS, each request completes once and releases its native resources. A timeout cancels the platform request; late or duplicate callbacks are ignored.
 - Android 12 and earlier depend on the legacy platform geocoder returning or failing.
 - Timeout behavior is owned by the native module where supported. Callers should avoid adding a second JavaScript timeout unless they intentionally need a stricter app-level deadline.
 - The module rejects with `INVALID_COORDINATES` when latitude or longitude is outside the valid coordinate range.
@@ -104,19 +124,3 @@ All fields are always present. When the platform geocoder cannot provide a field
 
 - The module reverse geocodes coordinates that you already have. It does not request GPS updates or device location permissions.
 - The package exports `reverseGeocode`, `Geocoder`, and the default `Geocoder` object.
-
-## Development
-
-Regenerate Nitro bindings after changing `src/specs/LocationGeocoder.nitro.ts` or `nitro.json`:
-
-```bash
-npm install
-npm run specs
-npm test
-```
-
-Validate the published package contents:
-
-```bash
-npm pack --dry-run
-```
