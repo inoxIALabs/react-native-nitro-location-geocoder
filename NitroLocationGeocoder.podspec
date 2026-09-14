@@ -11,6 +11,7 @@ Pod::Spec.new do |s|
   s.authors      = package["author"] || "Inoxia Labs"
 
   s.platforms    = { :ios => min_ios_version_supported, :visionos => 1.0 }
+  s.swift_version = '6.0'
   s.source       = { :path => "." }
 
   s.source_files = [

@@ -1,19 +1,7 @@
 import Foundation
-import CoreLocation
 import NitroModules
 
-class HybridLocationGeocoder: HybridLocationGeocoderSpec {
-
-    private let timeoutSeconds: TimeInterval = 10
-
-    private func preferredLocale(_ locale: String) -> Locale? {
-        let normalized = locale.trimmingCharacters(in: .whitespacesAndNewlines)
-        if normalized.isEmpty {
-            return nil
-        }
-        return Locale(identifier: normalized)
-    }
-
+final class HybridLocationGeocoder: HybridLocationGeocoderSpec {
     private func isValidCoordinate(latitude: Double, longitude: Double) -> Bool {
         latitude.isFinite &&
             longitude.isFinite &&
@@ -31,73 +19,27 @@ class HybridLocationGeocoder: HybridLocationGeocoderSpec {
             return promise
         }
 
-        let geocoder = CLGeocoder()
-        var didComplete = false
-        var timeoutWorkItem: DispatchWorkItem?
-
-        func complete(_ block: @escaping () -> Void) {
-            let finish = {
-                if didComplete {
-                    return
+        // Nitro's entry point is nonisolated. Only its Sendable promise and the
+        // input values cross into the actor that owns the native request.
+        Task { @MainActor in
+            let request = ReverseGeocodeRequest(geocoder: SystemLocationGeocoder())
+            request.start(latitude: latitude, longitude: longitude, locale: locale) { response in
+                switch response {
+                case .success(let location):
+                    // The generated result is backed by C++; construct it here
+                    // instead of transferring it between isolation domains.
+                    promise.resolve(withResult: LocationGeocoderResult(
+                        countryCode: location.countryCode,
+                        country: location.country,
+                        locality: location.locality,
+                        administrativeArea: location.administrativeArea,
+                        subAdministrativeArea: location.subAdministrativeArea,
+                        subLocality: location.subLocality
+                    ))
+                case .failure(let error):
+                    promise.reject(withError: RuntimeError.error(withMessage: error.message))
                 }
-                didComplete = true
-                timeoutWorkItem?.cancel()
-                block()
             }
-
-            if Thread.isMainThread {
-                finish()
-            } else {
-                DispatchQueue.main.async {
-                    finish()
-                }
-            }
-        }
-
-        func reject(_ message: String) {
-            complete {
-                promise.reject(withError: RuntimeError.error(withMessage: message))
-            }
-        }
-
-        func resolve(_ result: LocationGeocoderResult) {
-            complete {
-                promise.resolve(withResult: result)
-            }
-        }
-
-        timeoutWorkItem = DispatchWorkItem {
-            reject("GEOCODER_TIMEOUT")
-            geocoder.cancelGeocode()
-        }
-        if let timeoutWorkItem = timeoutWorkItem {
-            DispatchQueue.main.asyncAfter(
-                deadline: .now() + .milliseconds(Int(timeoutSeconds * 1000)),
-                execute: timeoutWorkItem
-            )
-        }
-
-        let location = CLLocation(latitude: latitude, longitude: longitude)
-        geocoder.reverseGeocodeLocation(location, preferredLocale: preferredLocale(locale)) { placemarks, error in
-            if let error = error {
-                reject("GEOCODER_FAILED: \(error.localizedDescription)")
-                return
-            }
-
-            guard let placemark = placemarks?.first else {
-                reject("NO_RESULTS")
-                return
-            }
-
-            let result = LocationGeocoderResult(
-                countryCode: placemark.isoCountryCode ?? "",
-                country: placemark.country ?? "",
-                locality: placemark.locality ?? "",
-                administrativeArea: placemark.administrativeArea ?? "",
-                subAdministrativeArea: placemark.subAdministrativeArea ?? "",
-                subLocality: placemark.subLocality ?? ""
-            )
-            resolve(result)
         }
 
         return promise
